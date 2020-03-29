@@ -135,7 +135,6 @@ function Player(color, x, y, width, height) {
     this.onCollision = function (object) {
         if (object.collide) {
             game.removeObject(object)
-            //this.sprites.push(new Sprite('blue', object.sprite.x, object.sprite.y, object.sprite.width, object.sprite.height))
         }
     }
 
@@ -257,7 +256,7 @@ game.addObject(new FoodCreator())
 
 game.start()
 
-// 1 - Estrutura
+// 1 - Project
 // 2 - Canvas, Context
 // 3 - Sprite constructor
 // 4 - GameLoop
