@@ -77,10 +77,12 @@ function Player(color, x, y, width, height) {
     this.collide = true
 
     this.sprites = [
-        new Sprite(color, x, y, width, height)
+        new Sprite('darkred', x, y, width, height),
+        new Sprite('red', x, y, width, height)
     ]
 
     this.head = this.sprites[0]
+    this.tail = this.sprites[1]
     this.lastX
     this.lastY
 
@@ -140,22 +142,29 @@ function Player(color, x, y, width, height) {
         if (this.head.x == other.sprite.x &&
             this.head.y == other.sprite.y) {
             game.removeObject(other)
-            this.sprites.push(new Sprite('red', this.head.x, this.head.y, this.head.width, this.head.height))
+
+            this.tail = new Sprite('red', this.tail.x, this.tail.y, this.tail.width, this.tail.height)
+            this.sprites.push(this.tail)
             // new food
             game.addObject(new Food('yellow', random(0, 16) * boxSize, random(0, 10) * boxSize, boxSize, boxSize))
         }
 
         // collision between snake sprites
-        // let index = -1
-        // for(let i = 1; i < this.sprites.length; i++){
-        //     if(this.sprites[i].x == this.head.x && this.sprites[i].y == this.head.y){
-        //         index = i
-        //         break;
-        //     }
-        // }
 
-        // if(index != -1)
-        //     this.sprites.splice(index, this.sprites.length)
+        if (this.sprites.length >= 5) {
+            let index = -1
+            for (let i = 1; i < this.sprites.length; i++) {
+                if (this.sprites[i].x == this.head.x && this.sprites[i].y == this.head.y) {
+                    index = i
+                    break;
+                }
+            }
+
+            if (index != -1) {
+                this.sprites.splice(index, this.sprites.length)
+                this.tail = this.sprites[this.sprites.length - 1]
+            }
+        }
 
     }
 
@@ -256,13 +265,13 @@ function random(min, max) {
 // dimensions
 const boxSize = 16
 const width = boxSize * 16
-const height = boxSize * 10
+const height = boxSize * 30
 // game controller
 const game = new Game()
 const input = new Input()
 const renderer = new Renderer(width, height)
 
-game.addObject(new Background('green', 'darkgreen', 10, 16))
+game.addObject(new Background('green', 'darkgreen', 30, 16))
 game.addObject(new Food('yellow', random(0, 16) * boxSize, random(0, 10) * boxSize, boxSize, boxSize))
 game.addObject(new Player('red', boxSize * 2, boxSize * 2, boxSize, boxSize))
 
