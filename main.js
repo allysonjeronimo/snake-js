@@ -33,20 +33,6 @@ function Input() {
     }
 }
 
-function FoodCreator() {
-
-    this.framesBetweenFoods = 5
-
-    this.update = function () {
-        if (game.everyInterval(this.framesBetweenFoods)) {
-            let randomX = random(0, 16)
-            let randomY = random(0, 10)
-            let newFood = new Food('yellow', randomX * boxSize, randomY * boxSize, boxSize, boxSize)
-            game.addObject(newFood)
-        }
-    }
-}
-
 function Food(color, x, y, width, height) {
     this.sprite = new Sprite(color, x, y, width, height)
     this.collide = true
@@ -87,54 +73,90 @@ function Background(color1, color2, rows, columns) {
 
 function Player(color, x, y, width, height) {
 
-    this.sprite = new Sprite(color, x, y, width, height)
     this.direction = { x: 0, y: 0 }
     this.collide = true
 
     this.sprites = [
-        this.sprite
+        new Sprite(color, x, y, width, height)
     ]
 
     this.head = this.sprites[0]
-
-    this.updatePosition = function (sprite) {
-        if (input.keyPressed('ArrowUp'))
-            this.direction = { x: 0, y: -1 }
-        if (input.keyPressed('ArrowDown'))
-            this.direction = { x: 0, y: 1 }
-        if (input.keyPressed('ArrowRight'))
-            this.direction = { x: 1, y: 0 }
-        if (input.keyPressed('ArrowLeft'))
-            this.direction = { x: -1, y: 0 }
-
-        sprite.x += this.direction.x * boxSize
-        sprite.y += this.direction.y * boxSize
-    }
+    this.lastX
+    this.lastY
 
     this.checkScreenBounds = function () {
-        if (this.sprite.x + this.sprite.width > renderer.screenBounds().width) {
-            this.sprite.x = 0
+        if (this.head.x + this.head.width > renderer.screenBounds().width) {
+            this.head.x = 0
         }
-        if (this.sprite.x < 0) {
-            this.sprite.x = renderer.screenBounds().width - this.sprite.width
+        if (this.head.x < 0) {
+            this.head.x = renderer.screenBounds().width - this.head.width
         }
-        if (this.sprite.y < 0) {
-            this.sprite.y = renderer.screenBounds().height - this.sprite.height
+        if (this.head.y < 0) {
+            this.head.y = renderer.screenBounds().height - this.head.height
         }
-        if (this.sprite.y + this.sprite.height > renderer.screenBounds().height) {
-            this.sprite.y = 0
+        if (this.head.y + this.head.height > renderer.screenBounds().height) {
+            this.head.y = 0
         }
+    }
+
+    this.updatePosition = function (sprite, x, y) {
+        this.lastX = sprite.x
+        this.lastY = sprite.y
+        sprite.x = x
+        sprite.y = y
     }
 
     this.update = function () {
-        this.sprites.forEach(s => this.updatePosition(s))
+
+        this.sprites.forEach(s => {
+            if (s == this.head) {
+
+                if (input.keyPressed('ArrowUp'))
+                    this.direction = { x: 0, y: -1 }
+                if (input.keyPressed('ArrowDown'))
+                    this.direction = { x: 0, y: 1 }
+                if (input.keyPressed('ArrowRight'))
+                    this.direction = { x: 1, y: 0 }
+                if (input.keyPressed('ArrowLeft'))
+                    this.direction = { x: -1, y: 0 }
+
+                this.lastX = this.head.x
+                this.lastY = this.head.y
+
+                this.head.x += this.direction.x * boxSize
+                this.head.y += this.direction.y * boxSize
+            }
+            else {
+                this.updatePosition(s, this.lastX, this.lastY)
+            }
+
+        })
         this.checkScreenBounds()
     }
 
-    this.onCollision = function (object) {
-        if (object.collide) {
-            game.removeObject(object)
+    this.checkCollision = function (other) {
+
+        // between head and fruit
+        if (this.head.x == other.sprite.x &&
+            this.head.y == other.sprite.y) {
+            game.removeObject(other)
+            this.sprites.push(new Sprite('red', this.head.x, this.head.y, this.head.width, this.head.height))
+            // new food
+            game.addObject(new Food('yellow', random(0, 16) * boxSize, random(0, 10) * boxSize, boxSize, boxSize))
         }
+
+        // collision between snake sprites
+        // let index = -1
+        // for(let i = 1; i < this.sprites.length; i++){
+        //     if(this.sprites[i].x == this.head.x && this.sprites[i].y == this.head.y){
+        //         index = i
+        //         break;
+        //     }
+        // }
+
+        // if(index != -1)
+        //     this.sprites.splice(index, this.sprites.length)
+
     }
 
     this.draw = function () {
@@ -148,13 +170,6 @@ function Sprite(color, x, y, width, height) {
     this.y = y
     this.width = width
     this.height = height
-
-    this.checkCollision = function (other) {
-        return this.x + this.width > other.x &&
-            this.x < other.x + other.width &&
-            this.y + this.height > other.y &&
-            this.y < other.y + other.height
-    }
 }
 
 function Game() {
@@ -171,7 +186,7 @@ function Game() {
         object.id = index
         objects[index] = object
 
-        if(object.collide){
+        if (object.collide) {
             collisionObjects[index] = object
         }
     }
@@ -179,10 +194,9 @@ function Game() {
     this.removeObject = function (object) {
         delete objects[object.id]
 
-        if(object.collide)
+        if (object.collide)
             delete collisionObjects[object.id]
     }
-
 
     this.start = function () {
         this.gameLoop = this.gameLoop.bind(this)
@@ -199,9 +213,8 @@ function Game() {
                 let object2 = objects[index2]
                 // review this
                 if (object1.id != object2.id &&
-                    object1.sprite.checkCollision(object2.sprite) &&
-                    object1.onCollision) {
-                    object1.onCollision(object2)
+                    object1.checkCollision) {
+                    object1.checkCollision(object2)
                 }
             }
         }
@@ -234,7 +247,6 @@ function Game() {
     this.everyInterval = function (interval) {
         return (frameCount % interval) == 0
     }
-
 }
 
 function random(min, max) {
@@ -251,8 +263,8 @@ const input = new Input()
 const renderer = new Renderer(width, height)
 
 game.addObject(new Background('green', 'darkgreen', 10, 16))
+game.addObject(new Food('yellow', random(0, 16) * boxSize, random(0, 10) * boxSize, boxSize, boxSize))
 game.addObject(new Player('red', boxSize * 2, boxSize * 2, boxSize, boxSize))
-game.addObject(new FoodCreator())
 
 game.start()
 
