@@ -35,10 +35,10 @@ function Input() {
 
 function FoodCreator() {
 
-    this.secondsBetweenFoods = 1
+    this.framesBetweenFoods = 5
 
     this.update = function () {
-        if (game.everyInterval(this.secondsBetweenFoods)) {
+        if (game.everyInterval(this.framesBetweenFoods)) {
             let randomX = random(0, 16)
             let randomY = random(0, 10)
             let newFood = new Food('yellow', randomX * boxSize, randomY * boxSize, boxSize, boxSize)
@@ -89,7 +89,6 @@ function Player(color, x, y, width, height) {
 
     this.sprite = new Sprite(color, x, y, width, height)
     this.direction = { x: 0, y: 0 }
-    this.speed = 1
     this.collide = true
 
     this.sprites = [
@@ -108,8 +107,8 @@ function Player(color, x, y, width, height) {
         if (input.keyPressed('ArrowLeft'))
             this.direction = { x: -1, y: 0 }
 
-        sprite.x += this.direction.x * (boxSize * this.speed)
-        sprite.y += this.direction.y * (boxSize * this.speed)
+        sprite.x += this.direction.x * boxSize
+        sprite.y += this.direction.y * boxSize
     }
 
     this.checkScreenBounds = function () {
@@ -143,7 +142,6 @@ function Player(color, x, y, width, height) {
     }
 }
 
-
 function Sprite(color, x, y, width, height) {
     this.color = color
     this.x = x
@@ -159,13 +157,10 @@ function Sprite(color, x, y, width, height) {
     }
 }
 
-function checkContext(msg, context) {
-    console.log(msg, context)
-}
-
 function Game() {
 
     let objects = {}
+    let collisionObjects = {}
     let frameCount = 0
 
     this.addObject = function (object) {
@@ -175,29 +170,35 @@ function Game() {
         let index = length == 0 ? 1 : parseInt(keys[length - 1]) + 1
         object.id = index
         objects[index] = object
+
+        if(object.collide){
+            collisionObjects[index] = object
+        }
     }
 
     this.removeObject = function (object) {
         delete objects[object.id]
+
+        if(object.collide)
+            delete collisionObjects[object.id]
     }
 
 
     this.start = function () {
         this.gameLoop = this.gameLoop.bind(this)
         // bind here is need because gameLoop function is called by window
-        setInterval(this.gameLoop, 400)
+        setInterval(this.gameLoop, 200)
     }
 
     this.checkCollisions = function () {
         // O(n²)
-        for (let index1 in objects) {
-            for (let index2 in objects) {
+        for (let index1 in collisionObjects) {
+            for (let index2 in collisionObjects) {
 
                 let object1 = objects[index1]
                 let object2 = objects[index2]
                 // review this
                 if (object1.id != object2.id &&
-                    object1.collide && object2.collide &&
                     object1.sprite.checkCollision(object2.sprite) &&
                     object1.onCollision) {
                     object1.onCollision(object2)
@@ -231,11 +232,10 @@ function Game() {
     }
 
     this.everyInterval = function (interval) {
-        return frameCount % (interval * 50) == 0
+        return (frameCount % interval) == 0
     }
 
 }
-
 
 function random(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
@@ -263,7 +263,7 @@ game.start()
 // 5 - Input and Renderer
 // 6 - Update position by input
 // 7 - Player and Foods (Add and Remove objects, Generated unique ids, Map?)
-// 8 - Collisions
+// 8 - Collisions (Separeted Collection)
 // 9 - Spawn Foods randomly every frame counts
 
 
