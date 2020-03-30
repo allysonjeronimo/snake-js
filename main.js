@@ -22,7 +22,38 @@ function Renderer(x = 0, y = 0, width, height) {
             context.fillStyle = sprite.color
             context.fillRect(sprite.x, sprite.y, sprite.width, sprite.height)
         }
+    }
 
+    function drawImage(img, x, y, width, height, deg, flip, flop, center) {
+
+        context.save();
+
+        if (typeof width === "undefined") width = img.width;
+        if (typeof height === "undefined") height = img.height;
+        if (typeof center === "undefined") center = false;
+
+        // Set rotation point to center of image, instead of top/left
+        if (center) {
+            x -= width / 2;
+            y -= height / 2;
+        }
+
+        // Set the origin to the center of the image
+        context.translate(x + width / 2, y + height / 2);
+
+        // Rotate the canvas around the origin
+        var rad = 2 * Math.PI - deg * Math.PI / 180;
+        context.rotate(rad);
+
+        // Flip/flop the canvas
+        if (flip) flipScale = -1; else flipScale = 1;
+        if (flop) flopScale = -1; else flopScale = 1;
+        context.scale(flipScale, flopScale);
+
+        // Draw the image    
+        context.drawImage(img, -width / 2, -height / 2, width, height);
+
+        context.restore();
     }
 }
 
@@ -176,14 +207,14 @@ function Player(x, y, width, height) {
     }
 
     this.draw = function () {
-        for(let i = this.sprites.length-1; i >= 0; i--){
+        for (let i = this.sprites.length - 1; i >= 0; i--) {
             renderer.drawSprite(this.sprites[i])
         }
     }
 }
 
 function Sprite(image, color, x, y, width, height) {
-    if(image){
+    if (image) {
         this.image = new Image()
         this.image.src = image
     }
@@ -285,7 +316,7 @@ const game = new Game()
 const input = new Input()
 const renderer = new Renderer(0, 3 * boxSize, width, height)
 
-game.addObject(new Background('green', 'darkgreen', 20, 12))
+game.addObject(new Background('#FBBE06', '#c90', 20, 12))
 game.addObject(new Background('black', '#111', 3, 12))
 game.addObject(new Food(random(0, 12) * boxSize, random(3, 20) * boxSize, boxSize, boxSize))
 game.addObject(new Player(boxSize * 5, boxSize * 5, boxSize, boxSize))
