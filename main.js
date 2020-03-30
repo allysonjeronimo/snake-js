@@ -1,4 +1,4 @@
-function Renderer(width, height) {
+function Renderer(x = 0, y = 0, width, height) {
 
     let canvas = document.querySelector('canvas')
     let context = canvas.getContext('2d')
@@ -7,7 +7,7 @@ function Renderer(width, height) {
     canvas.height = height
 
     this.screenBounds = function () {
-        return { width: canvas.width, height: canvas.height }
+        return { x, y, width: canvas.width, height: canvas.height }
     }
 
     this.clear = function () {
@@ -93,11 +93,11 @@ function Player(color, x, y, width, height) {
         if (this.head.x < 0) {
             this.head.x = renderer.screenBounds().width - this.head.width
         }
-        if (this.head.y < 0) {
+        if (this.head.y < renderer.screenBounds().y) {
             this.head.y = renderer.screenBounds().height - this.head.height
         }
         if (this.head.y + this.head.height > renderer.screenBounds().height) {
-            this.head.y = 0
+            this.head.y = renderer.screenBounds().y
         }
     }
 
@@ -146,7 +146,7 @@ function Player(color, x, y, width, height) {
             this.tail = new Sprite('red', this.tail.x, this.tail.y, this.tail.width, this.tail.height)
             this.sprites.push(this.tail)
             // new food
-            game.addObject(new Food('yellow', random(0, 16) * boxSize, random(0, 10) * boxSize, boxSize, boxSize))
+            game.addObject(new Food('yellow', random(0, 16) * boxSize, random(3, 30) * boxSize, boxSize, boxSize))
         }
 
         // collision between snake sprites
@@ -269,11 +269,12 @@ const height = boxSize * 30
 // game controller
 const game = new Game()
 const input = new Input()
-const renderer = new Renderer(width, height)
+const renderer = new Renderer(0, 3 * boxSize, width, height)
 
 game.addObject(new Background('green', 'darkgreen', 30, 16))
-game.addObject(new Food('yellow', random(0, 16) * boxSize, random(0, 10) * boxSize, boxSize, boxSize))
-game.addObject(new Player('red', boxSize * 2, boxSize * 2, boxSize, boxSize))
+game.addObject(new Background('black', '#111', 3, 16))
+game.addObject(new Food('yellow', random(0, 16) * boxSize, random(3, 30) * boxSize, boxSize, boxSize))
+game.addObject(new Player('red', boxSize * 5, boxSize * 5, boxSize, boxSize))
 
 game.start()
 
