@@ -15,8 +15,14 @@ function Renderer(x = 0, y = 0, width, height) {
     }
 
     this.drawSprite = function (sprite) {
-        context.fillStyle = sprite.color
-        context.fillRect(sprite.x, sprite.y, sprite.width, sprite.height)
+        if (sprite.image) {
+            context.drawImage(sprite.image, sprite.x, sprite.y, sprite.width, sprite.height)
+        }
+        else {
+            context.fillStyle = sprite.color
+            context.fillRect(sprite.x, sprite.y, sprite.width, sprite.height)
+        }
+
     }
 }
 
@@ -33,8 +39,8 @@ function Input() {
     }
 }
 
-function Food(color, x, y, width, height) {
-    this.sprite = new Sprite(color, x, y, width, height)
+function Food(x, y, width, height) {
+    this.sprite = new Sprite('./assets/fruit.png', 'yellow', x, y, width, height)
     this.collide = true
 
     this.draw = function () {
@@ -56,6 +62,7 @@ function Background(color1, color2, rows, columns) {
                 currentColor = x % 2 == 0 ? color2 : color1
 
             let sprite = new Sprite(
+                '',
                 currentColor,
                 x * boxSize,
                 y * boxSize,
@@ -71,14 +78,14 @@ function Background(color1, color2, rows, columns) {
     }
 }
 
-function Player(color, x, y, width, height) {
+function Player(x, y, width, height) {
 
     this.direction = { x: 0, y: 0 }
     this.collide = true
 
     this.sprites = [
-        new Sprite('darkred', x, y, width, height),
-        new Sprite('red', x, y, width, height)
+        new Sprite('./assets/head.png', 'darkred', x, y, width, height),
+        new Sprite('./assets/body.png', 'red', x, y, width, height)
     ]
 
     this.head = this.sprites[0]
@@ -143,10 +150,10 @@ function Player(color, x, y, width, height) {
             this.head.y == other.sprite.y) {
             game.removeObject(other)
 
-            this.tail = new Sprite('red', this.tail.x, this.tail.y, this.tail.width, this.tail.height)
+            this.tail = new Sprite('./assets/body.png', 'red', this.tail.x, this.tail.y, this.tail.width, this.tail.height)
             this.sprites.push(this.tail)
             // new food
-            game.addObject(new Food('yellow', random(0, 16) * boxSize, random(3, 30) * boxSize, boxSize, boxSize))
+            game.addObject(new Food(random(0, 12) * boxSize, random(3, 20) * boxSize, boxSize, boxSize))
         }
 
         // collision between snake sprites
@@ -169,11 +176,18 @@ function Player(color, x, y, width, height) {
     }
 
     this.draw = function () {
-        this.sprites.forEach(s => renderer.drawSprite(s))
+        for(let i = this.sprites.length-1; i >= 0; i--){
+            renderer.drawSprite(this.sprites[i])
+        }
     }
 }
 
-function Sprite(color, x, y, width, height) {
+function Sprite(image, color, x, y, width, height) {
+    if(image){
+        this.image = new Image()
+        this.image.src = image
+    }
+
     this.color = color
     this.x = x
     this.y = y
@@ -263,18 +277,18 @@ function random(min, max) {
 }
 
 // dimensions
-const boxSize = 16
-const width = boxSize * 16
-const height = boxSize * 30
+const boxSize = 32
+const width = boxSize * 12
+const height = boxSize * 20
 // game controller
 const game = new Game()
 const input = new Input()
 const renderer = new Renderer(0, 3 * boxSize, width, height)
 
-game.addObject(new Background('green', 'darkgreen', 30, 16))
-game.addObject(new Background('black', '#111', 3, 16))
-game.addObject(new Food('yellow', random(0, 16) * boxSize, random(3, 30) * boxSize, boxSize, boxSize))
-game.addObject(new Player('red', boxSize * 5, boxSize * 5, boxSize, boxSize))
+game.addObject(new Background('green', 'darkgreen', 20, 12))
+game.addObject(new Background('black', '#111', 3, 12))
+game.addObject(new Food(random(0, 12) * boxSize, random(3, 20) * boxSize, boxSize, boxSize))
+game.addObject(new Player(boxSize * 5, boxSize * 5, boxSize, boxSize))
 
 game.start()
 
