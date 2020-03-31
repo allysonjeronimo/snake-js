@@ -33,39 +33,10 @@ canvas.height = rows * blockSize
 
 // input
 var currentKey
-var lastDirection = {x: 0, y: 0}
 
 window.addEventListener('keydown', function (e) {
     currentKey = e.key
 })
-
-function inputDirection(){
-    var direction = lastDirection
-
-    if(currentKey == 'ArrowUp'){
-        direction.y = -1
-        direction.x = 0
-    }
-    else if(currentKey == 'ArrowRight'){
-        direction.x = 1
-        direction.y = 0
-    }
-    else if(currentKey == 'ArrowDown'){
-        direction.y = 1
-        direction.x = 0
-    }
-    else if(currentKey == 'ArrowLeft'){
-        direction.x = -1
-        direction.y = 0
-    }
-    else{
-        direction = lastDirection
-    }
-
-    lastDirection = direction
-
-    return direction
-}
 
 var interval
 
@@ -158,20 +129,31 @@ function createSnake() {
 
             this.body.push(newBodyBlock)
         },
-        move(direction) {
-            // move by direction
-            this.head.x += direction.x * blockSize
-            this.head.y += direction.y * blockSize            
+        xDirection: 0,
+        yDirection: 0,
+        lastX: 0,
+        lastY: 0,
+        changeDirection(x, y) {
+            this.xDirection = x
+            this.yDirection = y
         },
-        // move(i, x, y) {
-        //     if (i < this.body.length) {
-        //         var prevX = this.body[i].x
-        //         var prevY = this.body[i].y
-        //         this.body[i].x = x
-        //         this.body[i].y = y
-        //         this.move(i + 1, prevX, prevY)
-        //     }
-        // },
+        move() {
+
+            for (var i = 0; i < this.body.length; i++) {
+                this.body[i].lastX = this.body[i].x
+                this.body[i].lastY = this.body[i].y
+
+                if (this.body[i] == this.head) {
+                    this.body[i].x += this.xDirection * blockSize
+                    this.body[i].y += this.yDirection * blockSize
+                }
+                else {
+                    this.body[i].x = this.body[i - 1].lastX
+                    this.body[i].y = this.body[i - 1].lastY
+                }
+            }
+
+        },
         draw() {
             this.body.forEach(b => {
                 render(b.color, b.x, b.y, b.width, b.height)
@@ -212,7 +194,16 @@ function loop() {
     if (!gameOver) {
 
         // process input
-        snake.move(inputDirection())
+        if (currentKey == 'ArrowUp' && snake.yDirection != 1)
+            snake.changeDirection(0, -1)
+        if (currentKey == 'ArrowRight' && snake.xDirection != -1)
+            snake.changeDirection(1, 0)
+        if (currentKey == 'ArrowDown' && snake.yDirection != -1)
+            snake.changeDirection(0, 1)
+        if (currentKey == 'ArrowLeft' && snake.xDirection != 1)
+            snake.changeDirection(-1, 0)
+
+        snake.move()
 
         // update objects (position, collisions, etc)
 
@@ -231,22 +222,19 @@ function loop() {
 
         // collision with body
 
-        // if (snake.body.length > 4) {
-        //     snake.body.forEach(b => {
-        //         if (snake.head != b) {
-        //             if (snake.head.x == b.x && snake.head.y == b.y) {
-        //                 gameOver = true
-        //                 hiScore = score > hiScore ? score : hiScore
-        //             }
-        //         }
-        //     })
-        // }
-
-
+        if (snake.body.length > 4) {
+            snake.body.forEach(b => {
+                if (snake.head != b) {
+                    if (snake.head.x == b.x && snake.head.y == b.y) {
+                        gameOver = true
+                        hiScore = score > hiScore ? score : hiScore
+                    }
+                }
+            })
+        }
         // render result
-
         context.clearRect(0, 0, canvas.width, canvas.height)
-
+        
         background.draw()
         snake.draw()
         food.draw()
