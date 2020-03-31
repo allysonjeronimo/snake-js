@@ -33,11 +33,39 @@ canvas.height = rows * blockSize
 
 // input
 var currentKey
+var lastDirection = {x: 0, y: 0}
 
 window.addEventListener('keydown', function (e) {
     currentKey = e.key
-    this.console.log('Current Key: ', currentKey)
 })
+
+function inputDirection(){
+    var direction = lastDirection
+
+    if(currentKey == 'ArrowUp'){
+        direction.y = -1
+        direction.x = 0
+    }
+    else if(currentKey == 'ArrowRight'){
+        direction.x = 1
+        direction.y = 0
+    }
+    else if(currentKey == 'ArrowDown'){
+        direction.y = 1
+        direction.x = 0
+    }
+    else if(currentKey == 'ArrowLeft'){
+        direction.x = -1
+        direction.y = 0
+    }
+    else{
+        direction = lastDirection
+    }
+
+    lastDirection = direction
+
+    return direction
+}
 
 var interval
 
@@ -53,7 +81,7 @@ var background
 var textGameOver = createText('red', canvas.width / 2, canvas.height / 2,
     'Arial', '16px', 'center', 'Game Over')
 
-var textAfterGameOver = createText('white', canvas.width / 2, canvas.height / 2 + blockSize,
+var textPressEnter = createText('white', canvas.width / 2, canvas.height / 2 + blockSize,
     'Arial', '12px', 'center', 'Press Enter to Start!')
 
 var textScoreAndHiScore = createText('white', canvas.width / 2, canvas.height / 2 + blockSize * 2,
@@ -79,7 +107,7 @@ function random(min, max) {
 
 function createBackground() {
     return {
-        color: 'green',
+        color: '#00631b',
         x: 0,
         y: 0,
         width: canvas.width,
@@ -92,7 +120,7 @@ function createBackground() {
 
 function createFood() {
     return {
-        color: 'yellow',
+        color: '#fff200',
         x: random(0, columns) * blockSize,
         y: random(0, rows) * blockSize,
         width: blockSize,
@@ -115,7 +143,7 @@ function createSnake() {
         }
     }
 
-    const body = [newBlock('red')]
+    const body = [newBlock('#b3224a')]
 
     return {
         body: body,
@@ -124,21 +152,26 @@ function createSnake() {
             // add a new sprite on tail
             var last = this.body[this.body.length - 1]
 
-            var newBodyBlock = newBlock('darkred')
+            var newBodyBlock = newBlock('#591125')
             newBodyBlock.x = last.x
             newBodyBlock.y = last.y
 
             this.body.push(newBodyBlock)
         },
-        move(i, x, y) {
-            if (i < this.body.length) {
-                var prevX = this.body[i].x
-                var prevY = this.body[i].y
-                this.body[i].x = x
-                this.body[i].y = y
-                this.move(i + 1, prevX, prevY)
-            }
+        move(direction) {
+            // move by direction
+            this.head.x += direction.x * blockSize
+            this.head.y += direction.y * blockSize            
         },
+        // move(i, x, y) {
+        //     if (i < this.body.length) {
+        //         var prevX = this.body[i].x
+        //         var prevY = this.body[i].y
+        //         this.body[i].x = x
+        //         this.body[i].y = y
+        //         this.move(i + 1, prevX, prevY)
+        //     }
+        // },
         draw() {
             this.body.forEach(b => {
                 render(b.color, b.x, b.y, b.width, b.height)
@@ -168,11 +201,8 @@ function start() {
     gameOver = false
 
     // start(re) loop
-    if (interval) {
-        console.log('clear interval!')
+    if (interval)
         clearInterval(interval)
-    }
-
 
     interval = setInterval(loop, 200)
 }
@@ -182,32 +212,36 @@ function loop() {
     if (!gameOver) {
 
         // process input
-        if (currentKey == 'ArrowUp') {
-            snake.move(0, snake.head.x, snake.head.y - blockSize)
-        }
-        else if (currentKey == 'ArrowRight') {
-            snake.move(0, snake.head.x + blockSize, snake.head.y)
-        }
-        else if (currentKey == 'ArrowDown') {
-            snake.move(0, snake.head.x, snake.head.y + blockSize)
-        }
-        else if (currentKey == 'ArrowLeft') {
-            snake.move(0, snake.head.x - blockSize, snake.head.y)
-        }
+        snake.move(inputDirection())
 
-        // update objects (logic, collisions, etc)
+        // update objects (position, collisions, etc)
 
+        // check collision with food
         if (snake.head.x == food.x && snake.head.y == food.y) {
             score++
             snake.growUp()
             food = createFood()
-            // textScore.text = 'Score: ' + score
         }
 
-        if (snake.head.x > canvas.width || snake.head.x < 0 || snake.head.y < 0 || snake.head.y > canvas.height) {
+        // check collision with screen bounds
+        if (snake.head.x >= canvas.width || snake.head.x < 0 || snake.head.y < 0 || snake.head.y >= canvas.height) {
             gameOver = true
             hiScore = score > hiScore ? score : hiScore
         }
+
+        // collision with body
+
+        // if (snake.body.length > 4) {
+        //     snake.body.forEach(b => {
+        //         if (snake.head != b) {
+        //             if (snake.head.x == b.x && snake.head.y == b.y) {
+        //                 gameOver = true
+        //                 hiScore = score > hiScore ? score : hiScore
+        //             }
+        //         }
+        //     })
+        // }
+
 
         // render result
 
@@ -225,7 +259,7 @@ function loop() {
         else {
             context.clearRect(0, 0, canvas.width, canvas.height)
             textGameOver.draw()
-            textAfterGameOver.draw('Press Enter to Start!')
+            textPressEnter.draw()
             textScoreAndHiScore.draw('Score: ' + score + " - Hi-Score: " + hiScore)
         }
 
