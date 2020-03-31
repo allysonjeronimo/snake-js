@@ -2,7 +2,7 @@
 // 2 - Draw
 // 3 - Gameloop
 // 4 - Input
-// 5 - Object Player
+// 5 - Object snake
 // 6 - Clear Rect
 // 7 - Foods
 // 8 - BlockSize
@@ -11,8 +11,10 @@
 // 11 - Food Constructor (createFood)
 // 12 - Random
 // 13 - Start
-// 14 - GameOver
-// 15 - Text
+// 14 - Draw on object
+// 15 - Snake Body
+// 15 - GameOver
+// 16 - Text
 
 // variables
 
@@ -39,19 +41,19 @@ var interval
 // game objects
 
 var score = 0
-var player
+var snake
 var food
 var background
 
-var textScore = {
-    text: 'Score: 0',
-    color: 'white',
-    size: '12px',
-    font: 'Arial',
-    outline : 'black',
-    x: 10,
-    y: 20
-}
+// var textScore = {
+//     text: 'Score: 0',
+//     color: 'white',
+//     size: '12px',
+//     font: 'Arial',
+//     outline : 'black',
+//     x: 10,
+//     y: 20
+// }
 
 // functions
 
@@ -67,7 +69,10 @@ function createBackground() {
         x: 0,
         y: 0,
         width: canvas.width,
-        height: canvas.height
+        height: canvas.height,
+        draw() {
+            render(this.color, this.x, this.y, this.width, this.height)
+        }
     }
 }
 
@@ -76,43 +81,63 @@ function createFood() {
         color: 'yellow',
         x: random(0, columns) * blockSize,
         y: random(0, rows) * blockSize,
-        width: blockSize, height: blockSize
+        width: blockSize, 
+        height: blockSize,
+        draw() {
+            render(this.color, this.x, this.y, this.width, this.height)
+        }
     }
 }
 
-function createPlayer() {
+function createSnake() {
     return {
-        color: 'red',
-        x: random(0, columns) * blockSize,
-        y: random(0, rows) * blockSize,
-        width: blockSize, height: blockSize
+        head: {
+            color: 'red',
+            x: random(0, columns) * blockSize,
+            y: random(0, rows) * blockSize,
+            width: blockSize, height: blockSize
+        },
+        body: [],
+        draw() {
+
+            render(
+                this.head.color, 
+                this.head.x, 
+                this.head.y, 
+                this.head.width, 
+                this.head.height)
+
+            this.body.forEach(b => {
+                render(b.color, b.x, b.y, b.width, b.height)
+            })
+        }
     }
 }
 
-function draw(object) {
-    context.fillStyle = object.color
-    context.fillRect(object.x, object.y, object.width, object.height)
+function render(color, x, y, width, height) {
+    context.fillStyle = color
+    context.fillRect(x, y, width, height)
 }
 
-function drawText(text){
-    
-    context.font = text.size + ' ' + text.font
+// function drawText(text){
 
-    if(text.outline){
-        context.strokeStyle = text.outline
-        context.lineWidth = 4
-        context.strokeText(text.text, text.x, text.y)
-    }
+//     context.font = text.size + ' ' + text.font
 
-    context.font = text.size + ' ' + text.font
-    context.fillStyle = text.color
-    context.fillText(text.text, text.x, text.y)
-}
+//     if(text.outline){
+//         context.strokeStyle = text.outline
+//         context.lineWidth = 4
+//         context.strokeText(text.text, text.x, text.y)
+//     }
+
+//     context.font = text.size + ' ' + text.font
+//     context.fillStyle = text.color
+//     context.fillText(text.text, text.x, text.y)
+// }
 
 function start() {
     // init values
     score = 0
-    player = createPlayer()
+    snake = createSnake()
     food = createFood()
     background = createBackground()
 
@@ -120,50 +145,48 @@ function start() {
     interval = setInterval(loop, 200)
 }
 
-function gameover(){
-    clearInterval(interval)
-}
-
+// function gameover(){
+//     clearInterval(interval)
+// }
 
 function loop() {
-
-    console.log('loop()')
 
     // process input
 
     if (currentKey == 'ArrowUp') {
-        player.y -= blockSize
+        snake.head.y -= blockSize
     }
     else if (currentKey == 'ArrowRight') {
-        player.x += blockSize
+        snake.head.x += blockSize
     }
     else if (currentKey == 'ArrowDown') {
-        player.y += blockSize
+        snake.head.y += blockSize
     }
     else if (currentKey == 'ArrowLeft') {
-        player.x -= blockSize
+        snake.head.x -= blockSize
     }
 
     // update objects (logic, collisions, etc)
 
-    if (player.x == food.x && player.y == food.y) {
+    if (snake.head.x == food.x && snake.head.y == food.y) {
         score++
         food = createFood()
-        textScore.text = 'Score: ' + score
+        // textScore.text = 'Score: ' + score
     }
 
-    if(player.x > canvas.width || player.x < 0 || player.y < 0 || player.y > canvas.height){
-        gameover()
-    }
+    // if(snake.x > canvas.width || snake.x < 0 || snake.y < 0 || snake.y > canvas.height){
+    //     gameover()
+    // }
 
     // render result
 
     context.clearRect(0, 0, canvas.width, canvas.height)
 
-    draw(background)
-    draw(player)
-    draw(food)
-    drawText(textScore)
+    background.draw()
+    snake.draw()
+    food.draw()
+
+    // drawText(textScore)
 }
 
 start()
