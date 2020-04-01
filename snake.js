@@ -25,8 +25,8 @@ var canvas = document.querySelector('canvas')
 var context = canvas.getContext('2d')
 
 var columns = 16
-var rows = 12
-const blockSize = 16
+var rows = 14
+const blockSize = 18
 const hud = blockSize * 2
 
 var board = {
@@ -55,18 +55,19 @@ var audioItem = new Audio('./assets/audio/item.wav')
 var audioItem2 = new Audio('./assets/audio/item2.wav')
 var audioLetsRock = new Audio('./assets/audio/lets-rock.wav')
 var audioMenu = new Audio('./assets/audio/menu.wav')
-var audioPortal = new Audio('./assets/audio/portal.wav')
+var audiowall = new Audio('./assets/audio/wall.wav')
 
 // game objects
 var speed = 200
 var score = 0
 var hiScore = 0
 var gameOver = false
-var portal = false
+var showWall = false
 var snake
 var food
 var background
-var portal
+var wall
+var frames = 0
 
 var textGameOver = createText('#282a36', canvas.width / 2, canvas.height / 2,
     'Arial Black', '16px', 'center', 'Game Over', '#ff79c6')
@@ -91,54 +92,48 @@ function createText(color, x, y, font, size, align = 'start', defaultValue, stro
     }
 }
 
+function everyFrameCount(count){
+    return frames % count == 0
+}
+
 function random(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function createPortal() {
+function createWall() {
     var blocks = []
     for (var r = 0; r < rows; r++) {
-        var row = []
+        // var row = []
         for (var c = 0; c < columns; c++) {
-
-            if ((r == 0 || r == rows - 1 )) {
-                var block = createBlock('#282a36')
+            if (c == 0 || c == columns - 1 || r == 0 || r == rows - 1) {
+                var block = createBlock('#3b656e')
                 block.x = c * blockSize
                 block.y = board.top + r * blockSize
-                row.push(block)
+                // row.push(block)
+                blocks.push(block)
             }
-
-            if ((c == 0 || r == columns - 1 )) {
-                var block = createBlock('#282a36')
-                block.x = c * blockSize
-                block.y = board.top + r * blockSize
-
-                row.push(block)
-            }
-
         }
-        blocks.push(row)
+        // blocks.push(row)
     }
 
 
     return {
 
-        draw() {
-            for (var r = 0; r < rows; r++) {
-                for (var c = 0; c < columns; c++) {
-                    if ((r == 0 || r == rows - 1 )) {
-                        var block = blocks[r][c]
-                        render(block.color, block.x, block.y, blockSize, blockSize, '#8be9fd')
-                    }
-                    if ((c == 0 || r == columns - 1 )) {
-                        var block = blocks[r][c]
-                        render(block.color, block.x, block.y, blockSize, blockSize, '#ffb86c')
-                    }
+        blocks: blocks,
 
-                }
-            }
+        draw() {
+
+            blocks.forEach(block => {
+                render(block.color, block.x, block.y, blockSize, blockSize, '#8be9fd')
+            })
+            // for (var r = 0; r < blocks.length; r++) {
+            //     for (var c = 0; c < blocks[r].length; c++) {
+            //         var block = blocks[r][c]
+            //         render(block.color, block.x, block.y, blockSize, blockSize, '#8be9fd')
+            //     }
+            // }
         }
     }
 }
@@ -146,27 +141,22 @@ function createPortal() {
 function createBackground() {
 
     var blocks = []
+
     for (var r = 0; r < rows; r++) {
-        var row = []
         for (var c = 0; c < columns; c++) {
             var block = createBlock('#282a36')
             block.x = c * blockSize
             block.y = board.top + r * blockSize
-            row.push(block)
+            blocks.push(block)
         }
-        blocks.push(row)
     }
-
 
     return {
 
         draw() {
-            for (var r = 0; r < rows; r++) {
-                for (var c = 0; c < columns; c++) {
-                    var block = blocks[r][c]
-                    render(block.color, block.x, block.y, blockSize, blockSize, '#6272a4')
-                }
-            }
+            blocks.forEach(block => {
+                render(block.color, block.x, block.y, blockSize, blockSize, '#6272a4')
+            })
         }
     }
 }
@@ -174,12 +164,18 @@ function createBackground() {
 function createFood() {
     return {
         color: '#6b3454',
-        x: random(0, columns) * blockSize,
-        y: board.top + random(0, rows) * blockSize,
+        x: random(1, columns - 1) * blockSize,
+        y: board.top + random(1, rows - 1) * blockSize,
         width: blockSize,
         height: blockSize,
         draw() {
             render(this.color, this.x, this.y, this.width, this.height, '#ff79c6')
+        },
+        update(){
+            if(everyFrameCount(10))
+                this.color =  '#ff79c6'
+            else
+                this.color = '#6b3454'
         }
     }
 }
@@ -201,7 +197,12 @@ function createBlock(color, x = 0, y = board.top, width = blockSize, height = bl
 function createSnake() {
 
     // #32994c
-    const body = [createBlock('#1b5429')]
+
+    head = createBlock('#1b5429')
+    head.x = random(1, columns - 1) * blockSize
+    head.y = board.top + random(1, rows - 1) * blockSize
+
+    const body = [head]
 
     return {
         body: body,
@@ -290,13 +291,14 @@ function renderText(color, x, y, font, size, align, value, strokeColor) {
 function start() {
     // init values
     score = 0
+    showWall = true
+    gameOver = false
+    speed = 200
     snake = createSnake()
     food = createFood()
     background = createBackground()
-    portal = createPortal()
-    gameOver = false
-    speed = 200
-
+    wall = createWall()
+   
     // start(re) loop
     if (interval)
         clearInterval(interval)
@@ -306,6 +308,7 @@ function start() {
     audioBackground.loop = true
     audioLetsRock.play()
 
+    frames = 0
 }
 
 function changeSpeed() {
@@ -316,10 +319,14 @@ function changeSpeed() {
 
 function loop() {
 
+    frames++
+
     if (audioBackground.paused)
         audioBackground.play()
 
     if (!gameOver) {
+
+        food.update()
 
         // process input
         if (currentKey == 'ArrowUp' && snake.yDirection != 1)
@@ -342,7 +349,8 @@ function loop() {
             snake.growUp()
             food = createFood()
 
-            if (score % 10 == 0) {
+            if (score % 5 == 0) {
+                showWall = !showWall
                 audioItem2.play()
                 changeSpeed()
             }
@@ -350,11 +358,14 @@ function loop() {
         }
 
         // check collision with screen bounds
-        if (snake.head.x >= board.right || snake.head.x < board.left || snake.head.y < board.top || snake.head.y >= board.bottom) {
-            audioDeath.play()
-            gameOver = true
-            hiScore = score > hiScore ? score : hiScore
-        }
+        if (snake.head.x > board.right)
+            snake.head.x = board.left
+        if (snake.head.x < board.left)
+            snake.head.x = board.right - blockSize
+        if (snake.head.y < board.top)
+            snake.head.y = board.bottom - blockSize
+        if (snake.head.y > board.bottom)
+            snake.head.y = board.top
 
         // collision with body
 
@@ -369,11 +380,24 @@ function loop() {
                 }
             })
         }
+
+        // collision with wall
+        if (showWall) {
+            wall.blocks.forEach(block => {
+                if (block.x == snake.head.x && block.y == snake.head.y) {
+                    audioDeath.play()
+                    gameOver = true
+                    hiScore = score > hiScore ? score : hiScore
+                }
+            })
+        }
+
         // render result
         context.clearRect(0, 0, canvas.width, canvas.height)
 
         background.draw()
-        portal.draw()
+        if (showWall)
+            wall.draw()
         snake.draw()
         food.draw()
         textScore.draw('x ' + score)
