@@ -49,17 +49,27 @@ window.addEventListener('keydown', function (e) {
 
 var interval
 
-// game objects
+var audioBackground = new Audio('./assets/audio/bush_week.mp3')
+var audioDeath = new Audio('./assets/audio/death.wav')
+var audioItem = new Audio('./assets/audio/item.wav')
+var audioItem2 = new Audio('./assets/audio/item2.wav')
+var audioLetsRock = new Audio('./assets/audio/lets-rock.wav')
+var audioMenu = new Audio('./assets/audio/menu.wav')
+var audioPortal = new Audio('./assets/audio/portal.wav')
 
+// game objects
+var speed = 200
 var score = 0
 var hiScore = 0
 var gameOver = false
+var portal = false
 var snake
 var food
 var background
+var portal
 
 var textGameOver = createText('#282a36', canvas.width / 2, canvas.height / 2,
-    'Arial Black', '16px', 'center', 'Game Over', '#ff5555')
+    'Arial Black', '16px', 'center', 'Game Over', '#ff79c6')
 
 var textPressEnter = createText('#8be9fd', canvas.width / 2, canvas.height / 2 + blockSize,
     'Arial', '12px', 'center', 'Press Enter to Start!')
@@ -67,7 +77,9 @@ var textPressEnter = createText('#8be9fd', canvas.width / 2, canvas.height / 2 +
 var textScoreAndHiScore = createText('#f1fa8c', canvas.width / 2, canvas.height / 2 + blockSize * 2,
     'Arial', '12px', 'center')
 
-var textScore = createText('#ff79c6', 10, 20, 'Arial', '12px')
+var textScore = createText('#ff79c6', 24, 20, 'Arial', '12px')
+
+var foodHUD = createBlock('#6b3454', 10, 12, blockSize / 2, blockSize / 2)
 
 // functions
 function createText(color, x, y, font, size, align = 'start', defaultValue, strokeColor) {
@@ -85,19 +97,66 @@ function random(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
+function createPortal() {
+    var blocks = []
+    for (var r = 0; r < rows; r++) {
+        var row = []
+        for (var c = 0; c < columns; c++) {
+
+            if ((r == 0 || r == rows - 1 )) {
+                var block = createBlock('#282a36')
+                block.x = c * blockSize
+                block.y = board.top + r * blockSize
+                row.push(block)
+            }
+
+            if ((c == 0 || r == columns - 1 )) {
+                var block = createBlock('#282a36')
+                block.x = c * blockSize
+                block.y = board.top + r * blockSize
+
+                row.push(block)
+            }
+
+        }
+        blocks.push(row)
+    }
+
+
+    return {
+
+        draw() {
+            for (var r = 0; r < rows; r++) {
+                for (var c = 0; c < columns; c++) {
+                    if ((r == 0 || r == rows - 1 )) {
+                        var block = blocks[r][c]
+                        render(block.color, block.x, block.y, blockSize, blockSize, '#8be9fd')
+                    }
+                    if ((c == 0 || r == columns - 1 )) {
+                        var block = blocks[r][c]
+                        render(block.color, block.x, block.y, blockSize, blockSize, '#ffb86c')
+                    }
+
+                }
+            }
+        }
+    }
+}
+
 function createBackground() {
 
     var blocks = []
     for (var r = 0; r < rows; r++) {
         var row = []
         for (var c = 0; c < columns; c++) {
-            var block = newBlock('#282a36')
+            var block = createBlock('#282a36')
             block.x = c * blockSize
             block.y = board.top + r * blockSize
             row.push(block)
         }
         blocks.push(row)
     }
+
 
     return {
 
@@ -125,30 +184,34 @@ function createFood() {
     }
 }
 
-function newBlock(color) {
+function createBlock(color, x = 0, y = board.top, width = blockSize, height = blockSize, strokeColor = '#ff79c6') {
     return {
         color: color,
-        x: 0,
-        y: board.top,
-        width: blockSize,
-        height: blockSize
+        x: x,
+        y: y,
+        width: width,
+        height: height,
+        strokeColor: strokeColor,
+        draw() {
+            render(this.color, this.x, this.y, this.width, this.height, this.strokeColor)
+        }
     }
 }
 
 function createSnake() {
 
     // #32994c
-    const body = [newBlock('#1b5429')]
+    const body = [createBlock('#1b5429')]
 
     return {
         body: body,
         head: body[0],
-        highlightedBlockIndex : null,
+        highlightedBlockIndex: null,
         growUp() {
             // add a new sprite on tail
             var last = this.body[this.body.length - 1]
 
-            var newBodyBlock = newBlock('#1b5429')
+            var newBodyBlock = createBlock('#1b5429')
             newBodyBlock.x = last.x
             newBodyBlock.y = last.y
 
@@ -161,10 +224,15 @@ function createSnake() {
         lastX: 0,
         lastY: 0,
         changeDirection(x, y) {
+
+            // if(x != this.xDirection || y != this.yDirection)
+            //     audioMenu.play()
+
             this.xDirection = x
             this.yDirection = y
         },
         move() {
+
 
             for (var i = 0; i < this.body.length; i++) {
                 this.body[i].lastX = this.body[i].x
@@ -183,11 +251,11 @@ function createSnake() {
             this.highlightedBlockIndex += this.body.length <= 2 ? 1 : 2
         },
         draw() {
-            this.body.forEach((b,i) => {
-                if(i == this.highlightedBlockIndex){
-                    render('#50fa7b', b.x, b.y, b.width, b.height, '#50fa7b') 
+            this.body.forEach((b, i) => {
+                if (i == this.highlightedBlockIndex) {
+                    render('#50fa7b', b.x, b.y, b.width, b.height, '#50fa7b')
                 }
-                else{
+                else {
                     render(b.color, b.x, b.y, b.width, b.height, '#50fa7b')
                 }
             })
@@ -206,7 +274,7 @@ function render(color, x, y, width, height, strokeColor) {
 }
 
 function renderText(color, x, y, font, size, align, value, strokeColor) {
-    if(strokeColor){
+    if (strokeColor) {
         context.strokeStyle = strokeColor
         context.lineWidth = 2
         context.font = size + ' ' + font
@@ -225,16 +293,31 @@ function start() {
     snake = createSnake()
     food = createFood()
     background = createBackground()
+    portal = createPortal()
     gameOver = false
+    speed = 200
 
     // start(re) loop
     if (interval)
         clearInterval(interval)
 
-    interval = setInterval(loop, 200)
+    interval = setInterval(loop, speed)
+
+    audioBackground.loop = true
+    audioLetsRock.play()
+
+}
+
+function changeSpeed() {
+    speed -= 50
+    clearInterval(interval)
+    interval = setInterval(loop, speed)
 }
 
 function loop() {
+
+    if (audioBackground.paused)
+        audioBackground.play()
 
     if (!gameOver) {
 
@@ -255,12 +338,20 @@ function loop() {
         // check collision with food
         if (snake.head.x == food.x && snake.head.y == food.y) {
             score++
+            audioItem.play()
             snake.growUp()
             food = createFood()
+
+            if (score % 10 == 0) {
+                audioItem2.play()
+                changeSpeed()
+            }
+
         }
 
         // check collision with screen bounds
         if (snake.head.x >= board.right || snake.head.x < board.left || snake.head.y < board.top || snake.head.y >= board.bottom) {
+            audioDeath.play()
             gameOver = true
             hiScore = score > hiScore ? score : hiScore
         }
@@ -271,6 +362,7 @@ function loop() {
             snake.body.forEach(b => {
                 if (snake.head != b) {
                     if (snake.head.x == b.x && snake.head.y == b.y) {
+                        audioDeath.play()
                         gameOver = true
                         hiScore = score > hiScore ? score : hiScore
                     }
@@ -281,9 +373,11 @@ function loop() {
         context.clearRect(0, 0, canvas.width, canvas.height)
 
         background.draw()
+        portal.draw()
         snake.draw()
         food.draw()
-        textScore.draw('Score: ' + score)
+        textScore.draw('x ' + score)
+        foodHUD.draw()
     }
     else {
 
