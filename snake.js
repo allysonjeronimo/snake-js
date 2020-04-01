@@ -53,13 +53,13 @@ window.addEventListener('keydown', function (e) {
 
 var interval
 
-var audioBackground = new Audio('./assets/audio/bush_week.mp3')
-var audioDeath = new Audio('./assets/audio/death.wav')
-var audioItem = new Audio('./assets/audio/item.wav')
-var audioItem2 = new Audio('./assets/audio/item2.wav')
-var audioLetsRock = new Audio('./assets/audio/lets-rock.wav')
-var audioMenu = new Audio('./assets/audio/menu.wav')
-var audiowall = new Audio('./assets/audio/wall.wav')
+var audioBackground = new Audio('./assets/audio/music/bush_week.mp3')
+var audioDeath = new Audio('./assets/audio/fx/death.wav')
+var audioItem = new Audio('./assets/audio/fx/item.wav')
+var audioItem2 = new Audio('./assets/audio/fx/item2.wav')
+var audioLetsRock = new Audio('./assets/audio/fx/lets-rock.wav')
+var audioMenu = new Audio('./assets/audio/fx/menu.wav')
+var audiowall = new Audio('./assets/audio/fx/wall.wav')
 
 // game objects
 var speed = 200
