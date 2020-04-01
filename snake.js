@@ -92,7 +92,7 @@ function createText(color, x, y, font, size, align = 'start', defaultValue, stro
     }
 }
 
-function everyFrameCount(count){
+function everyFrameCount(count) {
     return frames % count == 0
 }
 
@@ -105,35 +105,38 @@ function random(min, max) {
 function createWall() {
     var blocks = []
     for (var r = 0; r < rows; r++) {
-        // var row = []
         for (var c = 0; c < columns; c++) {
             if (c == 0 || c == columns - 1 || r == 0 || r == rows - 1) {
                 var block = createBlock('#3b656e')
                 block.x = c * blockSize
                 block.y = board.top + r * blockSize
-                // row.push(block)
                 blocks.push(block)
             }
         }
-        // blocks.push(row)
     }
-
 
     return {
 
         blocks: blocks,
+        highlightedBlockIndex: null,
+        update() {
 
-        draw() {
-
-            blocks.forEach(block => {
-                render(block.color, block.x, block.y, blockSize, blockSize, '#8be9fd')
-            })
-            // for (var r = 0; r < blocks.length; r++) {
-            //     for (var c = 0; c < blocks[r].length; c++) {
-            //         var block = blocks[r][c]
-            //         render(block.color, block.x, block.y, blockSize, blockSize, '#8be9fd')
-            //     }
+            // if (!this.highlightedBlockIndex && everyFrameCount(100)) {
+            //     this.highlightedBlockIndex = 0
             // }
+
+            // this.highlightedBlockIndex += 4
+
+            // if(this.highlightedBlockIndex > this.blocks.length)
+            //     this.highlightedBlockIndex = null
+        },
+        draw() {
+            blocks.forEach((block, index) => {
+                if (index == this.highlightedBlockIndex)
+                    render('#8be9fd', block.x, block.y, blockSize, blockSize, '#8be9fd')
+                else
+                    render(block.color, block.x, block.y, blockSize, blockSize, '#8be9fd')
+            })
         }
     }
 }
@@ -171,9 +174,9 @@ function createFood() {
         draw() {
             render(this.color, this.x, this.y, this.width, this.height, '#ff79c6')
         },
-        update(){
-            if(everyFrameCount(10))
-                this.color =  '#ff79c6'
+        update() {
+            if (everyFrameCount(10))
+                this.color = '#ff79c6'
             else
                 this.color = '#6b3454'
         }
@@ -225,16 +228,10 @@ function createSnake() {
         lastX: 0,
         lastY: 0,
         changeDirection(x, y) {
-
-            // if(x != this.xDirection || y != this.yDirection)
-            //     audioMenu.play()
-
             this.xDirection = x
             this.yDirection = y
         },
         move() {
-
-
             for (var i = 0; i < this.body.length; i++) {
                 this.body[i].lastX = this.body[i].x
                 this.body[i].lastY = this.body[i].y
@@ -298,7 +295,7 @@ function start() {
     food = createFood()
     background = createBackground()
     wall = createWall()
-   
+
     // start(re) loop
     if (interval)
         clearInterval(interval)
@@ -312,7 +309,7 @@ function start() {
 }
 
 function changeSpeed() {
-    speed -= 50
+    speed -= 10
     clearInterval(interval)
     interval = setInterval(loop, speed)
 }
@@ -328,6 +325,7 @@ function loop() {
 
         food.update()
 
+        wall.update()
         // process input
         if (currentKey == 'ArrowUp' && snake.yDirection != 1)
             snake.changeDirection(0, -1)
@@ -383,8 +381,9 @@ function loop() {
 
         // collision with wall
         if (showWall) {
-            wall.blocks.forEach(block => {
+            wall.blocks.forEach((block,i) => {
                 if (block.x == snake.head.x && block.y == snake.head.y) {
+                    wall.highlightedBlockIndex = i
                     audioDeath.play()
                     gameOver = true
                     hiScore = score > hiScore ? score : hiScore
@@ -396,10 +395,13 @@ function loop() {
         context.clearRect(0, 0, canvas.width, canvas.height)
 
         background.draw()
-        if (showWall)
-            wall.draw()
+
         snake.draw()
         food.draw()
+
+        if (showWall)
+            wall.draw()
+
         textScore.draw('x ' + score)
         foodHUD.draw()
     }
@@ -415,6 +417,7 @@ function loop() {
         }
 
     }
+
 }
 
 start()
