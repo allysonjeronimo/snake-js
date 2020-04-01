@@ -27,9 +27,18 @@ var context = canvas.getContext('2d')
 var columns = 16
 var rows = 12
 const blockSize = 16
+const hud = blockSize * 2
 
-canvas.width = columns * blockSize
-canvas.height = rows * blockSize
+var board = {
+    left: 0,
+    top: hud, // hud
+    right: columns * blockSize,
+    bottom: rows * blockSize + hud
+}
+
+canvas.width = board.right
+canvas.height = board.bottom
+
 
 // input
 var currentKey
@@ -49,23 +58,23 @@ var snake
 var food
 var background
 
-var textGameOver = createText('red', canvas.width / 2, canvas.height / 2,
-    'Arial', '16px', 'center', 'Game Over')
+var textGameOver = createText('#282a36', canvas.width / 2, canvas.height / 2,
+    'Arial Black', '16px', 'center', 'Game Over', '#ff5555')
 
-var textPressEnter = createText('white', canvas.width / 2, canvas.height / 2 + blockSize,
+var textPressEnter = createText('#8be9fd', canvas.width / 2, canvas.height / 2 + blockSize,
     'Arial', '12px', 'center', 'Press Enter to Start!')
 
-var textScoreAndHiScore = createText('white', canvas.width / 2, canvas.height / 2 + blockSize * 2,
+var textScoreAndHiScore = createText('#f1fa8c', canvas.width / 2, canvas.height / 2 + blockSize * 2,
     'Arial', '12px', 'center')
 
-var textScore = createText('yellow', 10, 20, 'Arial', '12px')
+var textScore = createText('#ff79c6', 10, 20, 'Arial', '12px')
 
 // functions
-function createText(color, x, y, font, size, align = 'start', defaultValue) {
+function createText(color, x, y, font, size, align = 'start', defaultValue, strokeColor) {
     return {
-        color, x, y, font, size, align, defaultValue,
+        color, x, y, font, size, align, defaultValue, strokeColor,
         draw(value = defaultValue) {
-            renderText(this.color, this.x, this.y, this.font, this.size, this.align, value)
+            renderText(this.color, this.x, this.y, this.font, this.size, this.align, value, this.strokeColor)
         }
     }
 }
@@ -84,7 +93,7 @@ function createBackground() {
         for (var c = 0; c < columns; c++) {
             var block = newBlock('#282a36')
             block.x = c * blockSize
-            block.y = r * blockSize
+            block.y = board.top + r * blockSize
             row.push(block)
         }
         blocks.push(row)
@@ -107,7 +116,7 @@ function createFood() {
     return {
         color: '#6b3454',
         x: random(0, columns) * blockSize,
-        y: random(0, rows) * blockSize,
+        y: board.top + random(0, rows) * blockSize,
         width: blockSize,
         height: blockSize,
         draw() {
@@ -120,7 +129,7 @@ function newBlock(color) {
     return {
         color: color,
         x: 0,
-        y: 0,
+        y: board.top,
         width: blockSize,
         height: blockSize
     }
@@ -186,7 +195,14 @@ function render(color, x, y, width, height, strokeColor) {
     context.fillRect(x, y, width, height)
 }
 
-function renderText(color, x, y, font, size, align, value) {
+function renderText(color, x, y, font, size, align, value, strokeColor) {
+    if(strokeColor){
+        context.strokeStyle = strokeColor
+        context.lineWidth = 2
+        context.font = size + ' ' + font
+        context.textAlign = align
+        context.strokeText(value, x, y)
+    }
     context.font = size + ' ' + font
     context.fillStyle = color
     context.textAlign = align
@@ -234,7 +250,7 @@ function loop() {
         }
 
         // check collision with screen bounds
-        if (snake.head.x >= canvas.width || snake.head.x < 0 || snake.head.y < 0 || snake.head.y >= canvas.height) {
+        if (snake.head.x >= board.right || snake.head.x < board.left || snake.head.y < board.top || snake.head.y >= board.bottom) {
             gameOver = true
             hiScore = score > hiScore ? score : hiScore
         }
