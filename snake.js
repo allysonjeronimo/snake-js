@@ -14,9 +14,9 @@
 // 14 - Draw in object
 // 15 - Snake Body (array)
 // 16 - GrowUp and Move (this)
-// 15 - Game Over (start(), gameover(), interval)
-// 16 - Text
-// 17 - Score
+// 17 - Game Over (start(), gameover(), interval)
+// 18 - Text
+// 19 - Score
 
 // variables
 
@@ -77,44 +77,58 @@ function random(min, max) {
 }
 
 function createBackground() {
+
+    var blocks = []
+    for (var r = 0; r < rows; r++) {
+        var row = []
+        for (var c = 0; c < columns; c++) {
+            var block = newBlock('#282a36')
+            block.x = c * blockSize
+            block.y = r * blockSize
+            row.push(block)
+        }
+        blocks.push(row)
+    }
+
     return {
-        color: '#00631b',
-        x: 0,
-        y: 0,
-        width: canvas.width,
-        height: canvas.height,
+
         draw() {
-            render(this.color, this.x, this.y, this.width, this.height)
+            for (var r = 0; r < rows; r++) {
+                for (var c = 0; c < columns; c++) {
+                    var block = blocks[r][c]
+                    render(block.color, block.x, block.y, blockSize, blockSize, '#6272a4')
+                }
+            }
         }
     }
 }
 
 function createFood() {
     return {
-        color: '#fff200',
+        color: '#6b3454',
         x: random(0, columns) * blockSize,
         y: random(0, rows) * blockSize,
         width: blockSize,
         height: blockSize,
         draw() {
-            render(this.color, this.x, this.y, this.width, this.height)
+            render(this.color, this.x, this.y, this.width, this.height, '#ff79c6')
         }
+    }
+}
+
+function newBlock(color) {
+    return {
+        color: color,
+        x: 0,
+        y: 0,
+        width: blockSize,
+        height: blockSize
     }
 }
 
 function createSnake() {
 
-    function newBlock(color) {
-        return {
-            color: color,
-            x: 0,
-            y: 0,
-            width: blockSize,
-            height: blockSize
-        }
-    }
-
-    const body = [newBlock('#b3224a')]
+    const body = [newBlock('#32994c')]
 
     return {
         body: body,
@@ -123,7 +137,7 @@ function createSnake() {
             // add a new sprite on tail
             var last = this.body[this.body.length - 1]
 
-            var newBodyBlock = newBlock('#591125')
+            var newBodyBlock = newBlock('#1b5429')
             newBodyBlock.x = last.x
             newBodyBlock.y = last.y
 
@@ -156,13 +170,18 @@ function createSnake() {
         },
         draw() {
             this.body.forEach(b => {
-                render(b.color, b.x, b.y, b.width, b.height)
+                render(b.color, b.x, b.y, b.width, b.height, '#50fa7b')
             })
         }
     }
 }
 
-function render(color, x, y, width, height) {
+function render(color, x, y, width, height, strokeColor) {
+    if (strokeColor) {
+        context.strokeStyle = strokeColor
+        context.lineWidth = 2
+        context.strokeRect(x, y, width, height)
+    }
     context.fillStyle = color
     context.fillRect(x, y, width, height)
 }
@@ -234,7 +253,7 @@ function loop() {
         }
         // render result
         context.clearRect(0, 0, canvas.width, canvas.height)
-        
+
         background.draw()
         snake.draw()
         food.draw()
