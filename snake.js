@@ -137,11 +137,13 @@ function newBlock(color) {
 
 function createSnake() {
 
-    const body = [newBlock('#32994c')]
+    // #32994c
+    const body = [newBlock('#1b5429')]
 
     return {
         body: body,
         head: body[0],
+        highlightedBlockIndex : null,
         growUp() {
             // add a new sprite on tail
             var last = this.body[this.body.length - 1]
@@ -151,6 +153,8 @@ function createSnake() {
             newBodyBlock.y = last.y
 
             this.body.push(newBodyBlock)
+
+            this.highlightedBlockIndex = 0
         },
         xDirection: 0,
         yDirection: 0,
@@ -176,10 +180,16 @@ function createSnake() {
                 }
             }
 
+            this.highlightedBlockIndex += this.body.length <= 2 ? 1 : 2
         },
         draw() {
-            this.body.forEach(b => {
-                render(b.color, b.x, b.y, b.width, b.height, '#50fa7b')
+            this.body.forEach((b,i) => {
+                if(i == this.highlightedBlockIndex){
+                    render('#50fa7b', b.x, b.y, b.width, b.height, '#50fa7b') 
+                }
+                else{
+                    render(b.color, b.x, b.y, b.width, b.height, '#50fa7b')
+                }
             })
         }
     }
