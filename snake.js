@@ -24,6 +24,10 @@
 var canvas = document.querySelector('canvas')
 var context = canvas.getContext('2d')
 
+context.lineJoin = "round";
+context.globalCompositeOperation = "lighter";
+
+
 var columns = 16
 var rows = 14
 const blockSize = 18
@@ -171,14 +175,17 @@ function createFood() {
         y: board.top + random(1, rows - 1) * blockSize,
         width: blockSize,
         height: blockSize,
+        highlight: false,
         draw() {
-            render(this.color, this.x, this.y, this.width, this.height, '#ff79c6')
+            render(this.highlight ? '#ff79c6' : '#6b3454', this.x, this.y, this.width, this.height, '#ff79c6', this.highlight ? 8 : 4)
         },
         update() {
-            if (everyFrameCount(10))
-                this.color = '#ff79c6'
-            else
-                this.color = '#6b3454'
+            if (everyFrameCount(10)){
+                this.highlight = true
+            }
+            else{
+                this.highlight = false
+            }
         }
     }
 }
@@ -251,24 +258,30 @@ function createSnake() {
         draw() {
             this.body.forEach((b, i) => {
                 if (i == this.highlightedBlockIndex) {
-                    render('#50fa7b', b.x, b.y, b.width, b.height, '#50fa7b')
+                    render('#50fa7b', b.x, b.y, b.width, b.height, '#50fa7b', 8)
                 }
                 else {
-                    render(b.color, b.x, b.y, b.width, b.height, '#50fa7b')
+                    render(b.color, b.x, b.y, b.width, b.height, '#50fa7b', 4)
                 }
             })
         }
     }
 }
 
-function render(color, x, y, width, height, strokeColor) {
+function render(color, x, y, width, height, strokeColor, neon) {
+
     if (strokeColor) {
         context.strokeStyle = strokeColor
         context.lineWidth = 2
         context.strokeRect(x, y, width, height)
     }
+    if(neon){
+        context.shadowColor = strokeColor
+        context.shadowBlur = neon;
+    }
     context.fillStyle = color
     context.fillRect(x, y, width, height)
+    context.shadowBlur = 0;
 }
 
 function renderText(color, x, y, font, size, align, value, strokeColor) {
@@ -381,7 +394,7 @@ function loop() {
 
         // collision with wall
         if (showWall) {
-            wall.blocks.forEach((block,i) => {
+            wall.blocks.forEach((block, i) => {
                 if (block.x == snake.head.x && block.y == snake.head.y) {
                     wall.highlightedBlockIndex = i
                     audioDeath.play()
