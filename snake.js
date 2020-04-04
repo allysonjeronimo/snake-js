@@ -16,7 +16,7 @@
 // 16 - GrowUp and Move (this)
 // 17 - Game Over (start(), gameover(), interval)
 // 18 - Text
-// 19 - Score
+// 19 - Score (Web Storage)
 
 // variables
 
@@ -30,8 +30,8 @@ context.globalCompositeOperation = "lighter";
 
 var columns = 16
 var rows = 14
-const blockSize = 18
-const hud = blockSize * 2
+const blockSize = 24
+const hud = blockSize * 1.5
 
 var board = {
     left: 0,
@@ -84,7 +84,7 @@ var textScoreAndHiScore = createText('#f1fa8c', canvas.width / 2, canvas.height 
 
 var textScore = createText('#ff79c6', 24, 20, 'Arial', '12px')
 
-var foodHUD = createBlock('#6b3454', 10, 12, blockSize / 2, blockSize / 2)
+var foodHUD = createBlock('#6b3454', 8, 10, blockSize / 2, blockSize / 2)
 
 // functions
 function createText(color, x, y, font, size, align = 'start', defaultValue, strokeColor) {
@@ -124,15 +124,6 @@ function createWall() {
         blocks: blocks,
         highlightedBlockIndex: null,
         update() {
-
-            // if (!this.highlightedBlockIndex && everyFrameCount(100)) {
-            //     this.highlightedBlockIndex = 0
-            // }
-
-            // this.highlightedBlockIndex += 4
-
-            // if(this.highlightedBlockIndex > this.blocks.length)
-            //     this.highlightedBlockIndex = null
         },
         draw() {
             blocks.forEach((block, index) => {
@@ -162,7 +153,7 @@ function createBackground() {
 
         draw() {
             blocks.forEach(block => {
-                render(block.color, block.x, block.y, blockSize, blockSize, '#6272a4')
+                render(block.color, block.x, block.y, blockSize, blockSize, '#6272a4'/*'#44475a'*/)
             })
         }
     }
@@ -180,10 +171,10 @@ function createFood() {
             render(this.highlight ? '#ff79c6' : '#6b3454', this.x, this.y, this.width, this.height, '#ff79c6', this.highlight ? 8 : 4)
         },
         update() {
-            if (everyFrameCount(10)){
+            if (everyFrameCount(10)) {
                 this.highlight = true
             }
-            else{
+            else {
                 this.highlight = false
             }
         }
@@ -205,8 +196,6 @@ function createBlock(color, x = 0, y = board.top, width = blockSize, height = bl
 }
 
 function createSnake() {
-
-    // #32994c
 
     head = createBlock('#1b5429')
     head.x = random(1, columns - 1) * blockSize
@@ -270,17 +259,22 @@ function createSnake() {
 
 function render(color, x, y, width, height, strokeColor, neon) {
 
-    if (strokeColor) {
-        context.strokeStyle = strokeColor
-        context.lineWidth = 2
-        context.strokeRect(x, y, width, height)
-    }
-    if(neon){
+    if (neon) {
         context.shadowColor = strokeColor
         context.shadowBlur = neon;
     }
-    context.fillStyle = color
-    context.fillRect(x, y, width, height)
+
+    if (strokeColor) {
+        context.fillStyle = strokeColor
+        context.fillRect(x, y, width, height)
+        context.fillStyle = color
+        context.fillRect(x + 1, y + 1, width - 2, height - 2)
+    }
+    else {
+        context.fillStyle = color
+        context.fillRect(x, y, width, height)
+    }
+
     context.shadowBlur = 0;
 }
 
@@ -316,7 +310,7 @@ function start() {
     interval = setInterval(loop, speed)
 
     audioBackground.loop = true
-    audioLetsRock.play()
+    //audioLetsRock.play()
 
     frames = 0
 }
@@ -332,7 +326,7 @@ function loop() {
     frames++
 
     if (audioBackground.paused)
-        audioBackground.play()
+       // audioBackground.play()
 
     if (!gameOver) {
 
