@@ -12,8 +12,6 @@ canvas.height = rows * blockSize + hudHeight
 let colors = {
     green: '#50fa7b',
     darkGreen: '#164a23',
-    red: '#ff5555',
-    darkRed: '#591e1e',
     cyan: '#8be9fd',
     gray: '#44475a',
     darkGray: '#282a36',
