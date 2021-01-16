@@ -5,7 +5,7 @@
 ## Sobre o projeto
 
 Clássico Jogo Snake implementado utilizando Canvas e JavaScript. 
-[Jogue aqui](https://allysonjeronimo.github.io/snake-js/){:target="_blank"}
+[Jogue aqui](https://allysonjeronimo.github.io/snake-js/)
 
 ## Licença
 
