@@ -310,7 +310,7 @@ function start() {
     interval = setInterval(loop, speed)
 
     audioBackground.loop = true
-    //audioLetsRock.play()
+    audioLetsRock.play()
 
     frames = 0
 }
@@ -326,7 +326,7 @@ function loop() {
     frames++
 
     if (audioBackground.paused)
-       // audioBackground.play()
+        audioBackground.play()
 
     if (!gameOver) {
 
